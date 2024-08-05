@@ -93,9 +93,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // TODO: Start timer TIM16
-  //HAL_TIM_Base_Start(&htim16);
-  TIM16 -> CR1 |= TIM_CR1_CEN;
-
+  HAL_TIM_Base_Start_IT(&htim16);
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,6 +106,15 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     // TODO: Check pushbuttons to change timer delay
+    if ( !HAL_GPIO_ReadPin(Button2_GPIO_Port, Button2_Pin)){
+		  __HAL_TIM_SET_AUTORELOAD(&htim16, 1000-1);
+	  }
+	  else if(!HAL_GPIO_ReadPin(Button0_GPIO_Port, Button0_Pin)){
+		  __HAL_TIM_SET_AUTORELOAD(&htim16, 500-1);
+	  }
+	  else if(!HAL_GPIO_ReadPin(Button1_GPIO_Port, Button1_Pin)){
+		  __HAL_TIM_SET_AUTORELOAD(&htim16, 2000-1);
+	  }
 
     
 
