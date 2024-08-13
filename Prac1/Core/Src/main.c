@@ -45,8 +45,12 @@ TIM_HandleTypeDef htim16;
 
 /* USER CODE BEGIN PV */
 // TODO: Define input variables
-#define startPattern 0b11101001U;
-#define usedBits 0b11111111U;
+#define startPattern 0b10010111U
+#define usedBits 0b11111111U
+#define sw0 !HAL_GPIO_ReadPin(Button0_GPIO_Port, Button0_Pin)
+#define sw1 !HAL_GPIO_ReadPin(Button1_GPIO_Port, Button1_Pin)
+#define sw2 !HAL_GPIO_ReadPin(Button2_GPIO_Port, Button2_Pin)
+#define sw3 !HAL_GPIO_ReadPin(Button3_GPIO_Port, Button3_Pin)
 
 /* USER CODE END PV */
 
@@ -93,8 +97,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // TODO: Start timer TIM16
-  HAL_TIM_Base_Start_IT(&htim16);
-  
+  HAL_TIM_Base_Start_IT(&htim16);  // Start timer in interrupt mode
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,17 +110,16 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     // TODO: Check pushbuttons to change timer delay
-    if ( !HAL_GPIO_ReadPin(Button2_GPIO_Port, Button2_Pin)){
-		  __HAL_TIM_SET_AUTORELOAD(&htim16, 1000-1);
+	  uint8_t mask = sw0 + (sw1<<1) + (sw2<<2)  + (sw3<<3);
+      if ( mask == 0b0001){
+		  __HAL_TIM_SET_AUTORELOAD(&htim16, 500-1); // Change timer delay to 0.5s if SW0 pressed
 	  }
-	  else if(!HAL_GPIO_ReadPin(Button0_GPIO_Port, Button0_Pin)){
-		  __HAL_TIM_SET_AUTORELOAD(&htim16, 500-1);
+	  else if(mask == 0b0010){
+		  __HAL_TIM_SET_AUTORELOAD(&htim16, 2000-1); // Change timer delay to 2s if SW1 pressed
 	  }
-	  else if(!HAL_GPIO_ReadPin(Button1_GPIO_Port, Button1_Pin)){
-		  __HAL_TIM_SET_AUTORELOAD(&htim16, 2000-1);
+	  else if(mask==0b0100){
+		  __HAL_TIM_SET_AUTORELOAD(&htim16, 1000-1); // Change timer delay to 1s if SW2 pressed
 	  }
-
-    
 
   }
   /* USER CODE END 3 */
@@ -337,11 +340,12 @@ void TIM16_IRQHandler(void)
 	HAL_TIM_IRQHandler(&htim16);
 
 	// TODO: Change LED pattern
+	 uint8_t mask = sw0 + (sw1<<1) + (sw2<<2)  + (sw3<<3);
 	uint8_t num;
 	num = GPIOB -> ODR & usedBits;
-
-	if(num) {GPIOB -> ODR = ((num)<<1) & usedBits;}
-	else {GPIOB -> ODR |= startPattern;}
+	if(mask == 0b1000){GPIOB->ODR = startPattern;} // Display startPattern if SW3 pressed
+	else if(num) {GPIOB -> ODR = ((num)>>1) & usedBits;}  // Orderly change the patterns
+	else {GPIOB -> ODR |= startPattern;}  // Display startPattern
 
 	TIM16 -> SR &= ~TIM_SR_UIF;
 	// print something
